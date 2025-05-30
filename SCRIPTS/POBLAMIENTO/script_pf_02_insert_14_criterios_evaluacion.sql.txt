@@ -1,0 +1,6 @@
+INSERT INTO Criterios_Evaluacion (id_evaluacion, nombre, descripcion, peso, escala) VALUES
+(1, 'Originalidad', 'Grado de innovación del proyecto', 20.00, 5),
+(1, 'Metodología', 'Adecuación de la metodología empleada', 25.00, 5),
+(1, 'Resultados', 'Calidad y relevancia de los resultados', 25.00, 5),
+(1, 'Presentación', 'Claridad y calidad de la presentación', 15.00, 5),
+(1, 'Documentación', 'Completitud y calidad de la documentación', 15.00, 5);

@@ -1,0 +1,6 @@
+INSERT INTO Historico_Estados_Proyecto (id_proyecto, estado_anterior, estado_nuevo, id_usuario, comentario) VALUES
+(1, NULL, 'planificacion', 3, 'Proyecto creado'),
+(1, 'planificacion', 'en_proceso', 3, 'Inicio de desarrollo'),
+(1, 'en_proceso', 'finalizado', 3, 'Proyecto completado'),
+(2, NULL, 'planificacion', 4, 'Proyecto creado'),
+(2, 'planificacion', 'en_proceso', 4, 'Inicio de desarrollo');

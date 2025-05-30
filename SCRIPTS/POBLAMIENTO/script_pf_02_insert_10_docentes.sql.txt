@@ -1,0 +1,7 @@
+
+INSERT INTO Docentes (id_departamento, identificacion, nombres, apellidos, email, telefono, titulo_academico, especialidad) VALUES
+(1, '12345678', 'Carlos', 'Martínez', 'cmartinez@unal.edu.co', '3101234567', 'Ph.D. en Ciencias de la Computación', 'Inteligencia Artificial'),
+(1, '23456789', 'Ana', 'Gómez', 'agomez@unal.edu.co', '3102345678', 'M.Sc. en Ingeniería de Software', 'Desarrollo de Software'),
+(2, '34567890', 'Luis', 'Rodríguez', 'lrodriguez@unal.edu.co', '3103456789', 'Ph.D. en Ingeniería Civil', 'Estructuras'),
+(3, '45678901', 'María', 'Hernández', 'mhernandez@unal.edu.co', '3104567890', 'Ph.D. en Matemáticas', 'Álgebra Abstracta'),
+(4, '56789012', 'Pedro', 'López', 'plopez@uniandes.edu.co', '3105678901', 'Ph.D. en Economía', 'Econometría');

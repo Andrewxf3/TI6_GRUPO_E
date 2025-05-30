@@ -1,0 +1,258 @@
+/* 
+1. Listado de docentes en orden alfabético por apellidos y nombres. 
+Incluir 6 campos: identificación, nombres, apellidos, email, teléfono y título académico
+*/
+SELECT 
+    identificacion AS "Documento",
+    nombres AS "Nombres",
+    apellidos AS "Apellidos", 
+    email AS "Correo Electrónico",
+    telefono AS "Teléfono",
+    titulo_academico AS "Título Académico"
+FROM Docentes
+WHERE activo = TRUE
+ORDER BY apellidos, nombres;
+
+/*
+2. Listado de docentes en orden de código de departamento y alfabético por apellidos y nombres.
+Incluir 6 campos: código departamento, identificación, nombres completos, departamento, email y teléfono
+*/
+SELECT 
+    d.id_departamento AS "Código Depto",
+    d.identificacion AS "Documento",
+    d.apellidos || ', ' || d.nombres AS "Docente",
+    (SELECT nombre FROM Departamentos WHERE id_departamento = d.id_departamento) AS "Departamento",
+    d.email AS "Correo Electrónico",
+    d.telefono AS "Teléfono"
+FROM Docentes d
+WHERE d.activo = TRUE
+ORDER BY d.id_departamento, d.apellidos, d.nombres;
+
+
+
+/*
+3. Listado de docentes del departamento "Sistemas Digitales" ordenado por documento de identificación.
+Incluir 5 campos: documento, nombres completos, email, teléfono y título académico
+*/
+SELECT 
+    d.identificacion AS "Documento",
+    d.apellidos || ', ' || d.nombres AS "Docente",
+    d.email AS "Correo Electrónico",
+    d.telefono AS "Teléfono",
+    d.titulo_academico AS "Título Académico"
+FROM Docentes d
+WHERE d.id_departamento = (SELECT id_departamento FROM Departamentos WHERE nombre = 'Sistemas Digitales')
+AND d.activo = TRUE
+ORDER BY d.identificacion;
+
+
+
+
+/*
+4. Listado de cantidad de docentes por departamento.
+Mostrar código departamento y cantidad total de docentes
+*/
+SELECT 
+    dep.id_departamento AS "Código Depto",
+    dep.nombre AS "Departamento",
+    (SELECT COUNT(*) FROM Docentes WHERE id_departamento = dep.id_departamento AND activo = TRUE) AS "Total Docentes"
+FROM Departamentos dep
+ORDER BY dep.id_departamento;
+
+
+/*
+5. Listado de estudiantes en orden de género, apellidos y nombres.
+Incluir 6 campos: género, código, nombres completos, email, teléfono y semestre
+*/
+SELECT 
+    e.sexo AS "Género",
+    e.codigo_estudiante AS "Código",
+    e.apellidos || ', ' || e.nombres AS "Estudiante",
+    e.email AS "Correo Electrónico",
+    e.telefono AS "Teléfono",
+    e.semestre_actual AS "Semestre"
+FROM Estudiantes e
+WHERE e.activo = TRUE
+ORDER BY e.sexo, e.apellidos, e.nombres;
+
+
+/*
+6. Listado de estudiantes ordenado por género, apellidos y nombres.
+Incluir 7 campos: género, código, documento, nombres completos, email, teléfono y semestre
+*/
+SELECT 
+    e.sexo AS "Género",
+    e.codigo_estudiante AS "Código",
+    e.identificacion AS "Documento",
+    e.apellidos || ', ' || e.nombres AS "Estudiante",
+    e.email AS "Correo Electrónico",
+    e.telefono AS "Teléfono",
+    e.semestre_actual AS "Semestre"
+FROM Estudiantes e
+WHERE e.activo = TRUE
+ORDER BY e.sexo, e.apellidos, e.nombres;
+
+
+/*
+7. Listado de estudiantes de programas específicos ordenado por código de programa y documento.
+Incluir 5 campos: código programa, nombre programa, documento, nombres completos y semestre
+*/
+SELECT 
+    p.codigo AS "Código Programa",
+    p.nombre AS "Programa",
+    e.identificacion AS "Documento",
+    e.apellidos || ', ' || e.nombres AS "Estudiante",
+    e.semestre_actual AS "Semestre"
+FROM Estudiantes e,
+    (SELECT id_programa, codigo, nombre FROM Programas 
+     WHERE nombre IN ('Ingeniería de Software', 'Tecnología en Desarrollo de Software')) p
+WHERE e.id_programa = p.id_programa
+AND e.activo = TRUE
+ORDER BY p.codigo, e.identificacion;
+
+
+/*
+8. Listado de cantidad de estudiantes por programa.
+Mostrar código de programa y cantidad total de estudiantes
+*/
+SELECT 
+    p.codigo AS "Código Programa",
+    p.nombre AS "Programa",
+    (SELECT COUNT(*) FROM Estudiantes WHERE id_programa = p.id_programa AND activo = TRUE) AS "Total Estudiantes"
+FROM Programas p
+ORDER BY p.codigo;
+
+
+
+/*
+9. Listado de asignaturas ordenado por código.
+Incluir 6 campos: código, nombre, créditos, semestre, horas teoría y horas práctica
+*/
+SELECT 
+    codigo AS "Código",
+    nombre AS "Asignatura",
+    creditos AS "Créditos",
+    semestre AS "Semestre",
+    horas_teoria AS "Horas Teoría",
+    horas_practica AS "Horas Práctica"
+FROM Asignaturas
+WHERE activa = TRUE
+ORDER BY codigo;
+
+/*
+10. Listado de asignaturas de programas específicos ordenado por código de programa y asignatura.
+Incluir 6 campos: código programa, nombre programa, código asignatura, nombre asignatura, créditos y semestre
+*/
+SELECT 
+    p.codigo AS "Código Programa",
+    p.nombre AS "Programa",
+    a.codigo AS "Código Asignatura",
+    a.nombre AS "Asignatura",
+    a.creditos AS "Créditos",
+    a.semestre AS "Semestre"
+FROM Asignaturas a,
+    (SELECT id_programa, codigo, nombre FROM Programas 
+     WHERE nombre IN ('Ingeniería de Software', 'Tecnología en Desarrollo de Software')) p
+WHERE a.id_programa = p.id_programa
+AND a.activa = TRUE
+ORDER BY p.codigo, a.codigo;
+
+
+
+/*
+11. Listado de asignaturas de programas específicos ordenado por código de programa y asignatura.
+Incluir 6 campos: código programa, nombre programa, código asignatura, nombre asignatura, horas teoría y horas práctica
+*/
+SELECT 
+    p.codigo AS "Código Programa",
+    p.nombre AS "Programa",
+    a.codigo AS "Código Asignatura",
+    a.nombre AS "Asignatura",
+    a.horas_teoria AS "Horas Teoría",
+    a.horas_practica AS "Horas Práctica"
+FROM Asignaturas a,
+    (SELECT id_programa, codigo, nombre FROM Programas 
+     WHERE nombre IN ('Ingeniería de Software', 'Tecnología en Desarrollo de Software')) p
+WHERE a.id_programa = p.id_programa
+AND a.activa = TRUE
+ORDER BY p.codigo, a.codigo;
+
+
+
+/*
+12. Listado de cantidad de asignaturas por programa.
+Mostrar código de programa y cantidad total de asignaturas
+*/
+SELECT 
+    p.codigo AS "Código Programa",
+    p.nombre AS "Programa",
+    (SELECT COUNT(*) FROM Asignaturas WHERE id_programa = p.id_programa AND activa = TRUE) AS "Total Asignaturas"
+FROM Programas p
+ORDER BY p.codigo;
+
+/*
+13. Listado de proyectos agrupados por estado y facultad
+Incluye: nombre facultad, estado proyecto, cantidad proyectos y promedio de días de duración
+*/
+SELECT 
+    (SELECT nombre FROM Facultades WHERE id_facultad = 
+        (SELECT id_facultad FROM Departamentos WHERE id_departamento = 
+            (SELECT id_departamento FROM Programas WHERE id_programa = 
+                (SELECT id_programa FROM Asignaturas WHERE id_asignatura = 
+                    (SELECT id_asignatura FROM Docente_Asignatura WHERE id_docente_asignatura = 
+                        (SELECT id_docente_asignatura FROM Proyecto_Asignatura WHERE id_proyecto = p.id_proyecto)
+                    )
+                )
+            )
+        )
+    ) AS "Facultad",
+    p.estado AS "Estado Proyecto",
+    COUNT(p.id_proyecto) AS "Cantidad Proyectos",
+    AVG(DATE_PART('day', p.fecha_fin_esperado - p.fecha_inicio)) AS "Duración Promedio (días)"
+FROM Proyectos p
+WHERE p.deleted_at IS NULL
+GROUP BY "Facultad", p.estado
+ORDER BY "Facultad", COUNT(p.id_proyecto) DESC;
+
+
+/*
+14. Listado de evaluaciones agrupadas por tipo y año
+Incluye: tipo evaluación, año, cantidad evaluaciones, promedio puntaje y porcentaje aprobación
+*/
+SELECT 
+    e.nombre AS "Tipo Evaluación",
+    DATE_PART('year', pe.fecha_evaluacion) AS "Año",
+    COUNT(pe.id_proyecto_evaluacion) AS "Total Evaluaciones",
+    AVG(pe.puntaje_total) AS "Puntaje Promedio",
+    ROUND(100.0 * SUM(CASE WHEN pe.aprobado THEN 1 ELSE 0 END) / COUNT(*), 2) AS "% Aprobación"
+FROM Evaluaciones e,
+    Proyecto_Evaluacion pe
+WHERE e.id_evaluacion = pe.id_evaluacion
+GROUP BY e.nombre, DATE_PART('year', pe.fecha_evaluacion)
+HAVING COUNT(pe.id_proyecto_evaluacion) > 0
+ORDER BY e.nombre, "Año";
+
+/*
+15. Listado de programas con mayor cantidad de proyectos
+Incluye: código programa, nombre programa, facultad y cantidad proyectos
+*/
+SELECT 
+    pr.codigo AS "Código Programa",
+    pr.nombre AS "Programa",
+    (SELECT nombre FROM Facultades WHERE id_facultad = 
+        (SELECT id_facultad FROM Departamentos WHERE id_departamento = pr.id_departamento)
+    ) AS "Facultad",
+    COUNT(p.id_proyecto) AS "Total Proyectos"
+FROM Programas pr,
+    (SELECT id_programa FROM Asignaturas WHERE id_asignatura IN 
+        (SELECT id_asignatura FROM Docente_Asignatura WHERE id_docente_asignatura IN 
+            (SELECT id_docente_asignatura FROM Proyecto_Asignatura)
+        )
+    ) a,
+    Proyectos p
+WHERE pr.id_programa = a.id_programa
+AND p.id_proyecto IN (SELECT id_proyecto FROM Proyecto_Asignatura)
+AND p.deleted_at IS NULL
+GROUP BY pr.id_programa, pr.codigo, pr.nombre
+HAVING COUNT(p.id_proyecto) > 0
+ORDER BY COUNT(p.id_proyecto) DESC;

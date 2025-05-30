@@ -1,0 +1,6 @@
+INSERT INTO Proyectos (id_tipo_proyecto, titulo, descripcion, fecha_inicio, fecha_fin_esperado, estado) VALUES
+(1, 'Sistema de Gestión Académica', 'Desarrollo de un sistema para gestión de notas y horarios', '2023-01-15', '2023-06-15', 'finalizado'),
+(1, 'Aplicación móvil para turismo', 'App para recomendación de sitios turísticos', '2023-02-01', '2023-07-01', 'en_proceso'),
+(2, 'Análisis de datos climáticos', 'Investigación sobre patrones climáticos en Colombia', '2023-03-10', '2023-09-10', 'en_proceso'),
+(3, 'Prototipo de puente peatonal', 'Diseño y modelado de puente peatonal', '2023-01-20', '2023-05-20', 'finalizado'),
+(4, 'Talleres de programación para jóvenes', 'Programa de extensión a colegios', '2023-04-01', '2023-11-30', 'planificacion');

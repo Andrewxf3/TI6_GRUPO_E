@@ -1,0 +1,6 @@
+INSERT INTO Estudiantes (id_programa, codigo_estudiante, identificacion, nombres, sexo, apellidos, email, telefono, semestre_actual) VALUES
+(1, '202010123', '1012345678', 'Juan','masculino','Pérez', 'jperez@unal.edu.co', '3201234567', 5),
+(1, '202010124', '1012345679', 'Laura','femenino','García', 'lgarcia@unal.edu.co', '3202345678', 6),
+(1, '202010125', '1012345680', 'Carlos','masculino','Sánchez', 'csanchez@unal.edu.co', '3203456789', 7),
+(2, '202010126', '1012345681', 'Ana','femenino','Martínez', 'amartinez@unal.edu.co', '3204567890', 5),
+(3, '202010127', '1012345682', 'Pedro','masculino','López', 'plopez@unal.edu.co', '3205678901', 8);

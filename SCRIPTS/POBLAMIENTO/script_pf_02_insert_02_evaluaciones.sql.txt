@@ -1,0 +1,6 @@
+INSERT INTO Evaluaciones (nombre, descripcion) VALUES
+('Evaluación de Proyectos de Grado', 'Evaluación integral de proyectos de grado'),
+('Evaluación de Viabilidad', 'Evaluación inicial de viabilidad técnica'),
+('Evaluación de Impacto Social', 'Evaluación del potencial impacto social'),
+('Evaluación Final de Proyectos', 'Evaluación final de proyectos de investigación'),
+('Evaluación de Prototipos', 'Evaluación técnica de prototipos desarrollados');

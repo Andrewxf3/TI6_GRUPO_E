@@ -1,0 +1,6 @@
+INSERT INTO Permisos (nombre, descripcion, modulo) VALUES
+('crear_proyectos', 'Permite crear nuevos proyectos', 'proyectos'),
+('editar_proyectos', 'Permite editar proyectos existentes', 'proyectos'),
+('evaluar_proyectos', 'Permite evaluar proyectos', 'evaluaciones'),
+('gestion_usuarios', 'Permite gestionar usuarios del sistema', 'administracion'),
+('generar_reportes', 'Permite generar reportes del sistema', 'reportes');

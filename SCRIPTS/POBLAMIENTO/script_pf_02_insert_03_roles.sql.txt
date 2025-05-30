@@ -1,0 +1,6 @@
+INSERT INTO Roles (nombre, descripcion) VALUES
+('Administrador', 'Acceso total al sistema'),
+('Docente', 'Rol para profesores e investigadores'),
+('Estudiante', 'Rol para estudiantes'),
+('Evaluador', 'Rol para evaluadores de proyectos'),
+('Coordinador', 'Rol para coordinadores académicos');

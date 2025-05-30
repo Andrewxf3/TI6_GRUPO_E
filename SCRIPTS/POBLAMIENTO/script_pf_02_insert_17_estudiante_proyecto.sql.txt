@@ -1,0 +1,6 @@
+INSERT INTO Estudiante_Proyecto (id_proyecto, id_estudiante, rol, porcentaje_participacion) VALUES
+(1, 1, 'lider', 40.00),
+(1, 2, 'miembro', 30.00),
+(1, 3, 'miembro', 30.00),
+(2, 4, 'lider', 50.00),
+(3, 5, 'miembro', 25.00);

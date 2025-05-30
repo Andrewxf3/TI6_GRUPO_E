@@ -1,0 +1,6 @@
+INSERT INTO Tipos_Proyecto (nombre, descripcion, requisitos) VALUES
+('Proyecto de Grado', 'Proyecto final para optar al título', 'Haber aprobado el 80% de los créditos'),
+('Proyecto de Investigación', 'Proyecto con enfoque investigativo', 'Aprobación del director de investigación'),
+('Proyecto de Aula', 'Proyecto asociado a una asignatura', 'Inscripción en la asignatura correspondiente'),
+('Proyecto de Extensión', 'Proyecto con impacto social', 'Aprobación del comité de extensión'),
+('Proyecto de Emprendimiento', 'Proyecto con enfoque empresarial', 'Presentación de plan de negocios');

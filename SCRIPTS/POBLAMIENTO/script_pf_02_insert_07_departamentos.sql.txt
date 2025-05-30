@@ -1,0 +1,7 @@
+
+INSERT INTO Departamentos (id_facultad, nombre, director, telefono, email) VALUES
+(1, 'Departamento de Ingeniería de Sistemas', 'Andrés Navarro', '+5713165000 Ext. 1231', 'sistemas@unal.edu.co'),
+(1, 'Departamento de Ingeniería Civil', 'Gloria Pérez', '+5713165000 Ext. 1232', 'civil@unal.edu.co'),
+(2, 'Departamento de Matemáticas', 'Fernando Zalamea', '+5713165000 Ext. 1241', 'matematicas@unal.edu.co'),
+(3, 'Departamento de Economía', 'Alejandro Gaviria', '+5713394949 Ext. 2011', 'economia@uniandes.edu.co'),
+(4, 'Departamento de Artes Visuales', 'Carlos Salazar', '+5723212100 Ext. 3011', 'artesvisuales@univalle.edu.co');

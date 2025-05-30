@@ -1,0 +1,6 @@
+INSERT INTO Detalle_Evaluacion (id_proyecto_evaluacion, id_criterio, puntaje, observaciones) VALUES
+(1, 1, 4.5, 'Buen nivel de originalidad'),
+(1, 2, 4.0, 'Metodología bien estructurada'),
+(1, 3, 4.5, 'Resultados relevantes'),
+(1, 4, 4.0, 'Presentación clara'),
+(1, 5, 3.5, 'Documentación completa pero con algunos errores');

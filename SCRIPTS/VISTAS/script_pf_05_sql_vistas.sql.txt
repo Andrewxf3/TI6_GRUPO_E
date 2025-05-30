@@ -1,0 +1,335 @@
+/*
+1. vista_proyectos - Listado completo de proyectos con información asociada
+Tablas: tipos de proyecto, proyectos, facultad, programas, asignaturas, grupos, docentes y estudiantes
+*/
+CREATE OR REPLACE VIEW vista_proyectos AS
+SELECT 
+    pr.id_proyecto AS codigo_proyecto,
+    pr.titulo AS nombre_proyecto,
+    pr.descripcion,
+    pr.fecha_inicio,
+    pr.fecha_fin_esperado,
+    pr.fecha_fin_real,
+    pr.estado,
+    pr.observaciones,
+    tp.id_tipo_proyecto AS codigo_tipo_proyecto,
+    tp.nombre AS tipo_proyecto,
+    tp.descripcion AS descripcion_tipo,
+    f.id_facultad AS codigo_facultad,
+    f.nombre AS facultad,
+    d.id_departamento AS codigo_departamento,
+    d.nombre AS departamento,
+    p.id_programa AS codigo_programa,
+    p.nombre AS programa,
+    p.codigo AS codigo_curricular,
+    a.id_asignatura AS codigo_asignatura,
+    a.nombre AS asignatura,
+    a.codigo AS codigo_asignatura_curricular,
+    da.grupo AS grupo_asignatura,
+    doc.id_docente AS codigo_docente,
+    doc.identificacion AS documento_docente,
+    doc.nombres AS nombres_docente,
+    doc.apellidos AS apellidos_docente,
+    e.id_estudiante AS codigo_estudiante,
+    e.identificacion AS documento_estudiante,
+    e.codigo_estudiante AS codigo_estudiante_curricular,
+    e.nombres AS nombres_estudiante,
+    e.apellidos AS apellidos_estudiante,
+    ep.rol AS rol_estudiante,
+    ep.porcentaje_participacion
+FROM 
+    Proyectos pr
+    JOIN Tipos_Proyecto tp ON pr.id_tipo_proyecto = tp.id_tipo_proyecto
+    JOIN Proyecto_Asignatura pa ON pr.id_proyecto = pa.id_proyecto
+    JOIN Docente_Asignatura da ON pa.id_docente_asignatura = da.id_docente_asignatura
+    JOIN Asignaturas a ON da.id_asignatura = a.id_asignatura
+    JOIN Programas p ON a.id_programa = p.id_programa
+    JOIN Departamentos d ON p.id_departamento = d.id_departamento
+    JOIN Facultades f ON d.id_facultad = f.id_facultad
+    JOIN Docentes doc ON da.id_docente = doc.id_docente
+    JOIN Estudiante_Proyecto ep ON pr.id_proyecto = ep.id_proyecto
+    JOIN Estudiantes e ON ep.id_estudiante = e.id_estudiante
+WHERE 
+    pr.deleted_at IS NULL;
+
+
+
+
+/*
+2. vista_evaluaciones - Listado completo de evaluaciones con información asociada
+Tablas: tipos de proyecto, proyectos, facultad, programas, asignaturas, grupos, docentes y estudiantes
+*/
+CREATE OR REPLACE VIEW vista_evaluaciones AS
+SELECT 
+    ev.id_evaluacion AS codigo_evaluacion,
+    ev.nombre AS nombre_evaluacion,
+    ev.descripcion AS descripcion_evaluacion,
+    pe.id_proyecto_evaluacion AS codigo_proyecto_evaluacion,
+    pe.fecha_evaluacion,
+    pe.puntaje_total,
+    pe.aprobado,
+    pe.observaciones AS observaciones_evaluacion,
+    pr.id_proyecto AS codigo_proyecto,
+    pr.titulo AS nombre_proyecto,
+    tp.id_tipo_proyecto AS codigo_tipo_proyecto,
+    tp.nombre AS tipo_proyecto,
+    f.id_facultad AS codigo_facultad,
+    f.nombre AS facultad,
+    p.id_programa AS codigo_programa,
+    p.nombre AS programa,
+    a.id_asignatura AS codigo_asignatura,
+    a.nombre AS asignatura,
+    da.grupo AS grupo_asignatura,
+    doc.id_docente AS codigo_docente,
+    CONCAT(doc.nombres, ' ', doc.apellidos) AS nombre_docente,
+    e.id_estudiante AS codigo_estudiante,
+    CONCAT(e.nombres, ' ', e.apellidos) AS nombre_estudiante,
+    STRING_AGG(CONCAT(c.nombre, ': ', de.puntaje), ', ') AS detalle_criterios
+FROM 
+    Evaluaciones ev
+    JOIN Proyecto_Evaluacion pe ON ev.id_evaluacion = pe.id_evaluacion
+    JOIN Proyectos pr ON pe.id_proyecto = pr.id_proyecto
+    JOIN Tipos_Proyecto tp ON pr.id_tipo_proyecto = tp.id_tipo_proyecto
+    JOIN Proyecto_Asignatura pa ON pr.id_proyecto = pa.id_proyecto
+    JOIN Docente_Asignatura da ON pa.id_docente_asignatura = da.id_docente_asignatura
+    JOIN Asignaturas a ON da.id_asignatura = a.id_asignatura
+    JOIN Programas p ON a.id_programa = p.id_programa
+    JOIN Departamentos d ON p.id_departamento = d.id_departamento
+    JOIN Facultades f ON d.id_facultad = f.id_facultad
+    JOIN Docentes doc ON da.id_docente = doc.id_docente
+    JOIN Estudiante_Proyecto ep ON pr.id_proyecto = ep.id_proyecto
+    JOIN Estudiantes e ON ep.id_estudiante = e.id_estudiante
+    JOIN Detalle_Evaluacion de ON pe.id_proyecto_evaluacion = de.id_proyecto_evaluacion
+    JOIN Criterios_Evaluacion c ON de.id_criterio = c.id_criterio
+WHERE 
+    pr.deleted_at IS NULL
+GROUP BY 
+    ev.id_evaluacion, pe.id_proyecto_evaluacion, pr.id_proyecto, tp.id_tipo_proyecto,
+    f.id_facultad, p.id_programa, a.id_asignatura, da.grupo, doc.id_docente, e.id_estudiante;
+
+
+
+/*
+3. vista_estadistica - Estadísticas organizadas de proyectos
+Agrupado por: facultad, programa, asignatura y tipos de proyecto
+*/
+CREATE OR REPLACE VIEW vista_estadistica AS
+SELECT 
+    f.id_facultad AS codigo_facultad,
+    f.nombre AS facultad,
+    p.id_programa AS codigo_programa,
+    p.nombre AS programa,
+    a.id_asignatura AS codigo_asignatura,
+    a.nombre AS asignatura,
+    tp.id_tipo_proyecto AS codigo_tipo_proyecto,
+    tp.nombre AS tipo_proyecto,
+    COUNT(DISTINCT pr.id_proyecto) AS total_proyectos,
+    COUNT(DISTINCT doc.id_docente) AS total_docentes,
+    COUNT(DISTINCT e.id_estudiante) AS total_estudiantes,
+    AVG(DATE_PART('day', pr.fecha_fin_esperado - pr.fecha_inicio)) AS duracion_promedio_dias,
+    ROUND(AVG(pe.puntaje_total), 2) AS evaluacion_promedio
+FROM 
+    Facultades f
+    JOIN Departamentos d ON f.id_facultad = d.id_facultad
+    JOIN Programas p ON d.id_departamento = p.id_departamento
+    JOIN Asignaturas a ON p.id_programa = a.id_programa
+    JOIN Docente_Asignatura da ON a.id_asignatura = da.id_asignatura
+    JOIN Docentes doc ON da.id_docente = doc.id_docente
+    JOIN Proyecto_Asignatura pa ON da.id_docente_asignatura = pa.id_docente_asignatura
+    JOIN Proyectos pr ON pa.id_proyecto = pr.id_proyecto
+    JOIN Tipos_Proyecto tp ON pr.id_tipo_proyecto = tp.id_tipo_proyecto
+    LEFT JOIN Estudiante_Proyecto ep ON pr.id_proyecto = ep.id_proyecto
+    LEFT JOIN Estudiantes e ON ep.id_estudiante = e.id_estudiante
+    LEFT JOIN Proyecto_Evaluacion pe ON pr.id_proyecto = pe.id_proyecto
+WHERE 
+    pr.deleted_at IS NULL
+GROUP BY 
+    f.id_facultad, f.nombre, p.id_programa, p.nombre, 
+    a.id_asignatura, a.nombre, tp.id_tipo_proyecto, tp.nombre;
+
+/*
+3. vista_estadistica - Estadísticas organizadas de proyectos
+Agrupado por: facultad, programa, asignatura y tipos de proyecto
+Versión corregida del error de DATE_PART
+*/
+CREATE OR REPLACE VIEW vista_estadistica AS
+SELECT 
+    f.id_facultad AS codigo_facultad,
+    f.nombre AS facultad,
+    p.id_programa AS codigo_programa,
+    p.nombre AS programa,
+    a.id_asignatura AS codigo_asignatura,
+    a.nombre AS asignatura,
+    tp.id_tipo_proyecto AS codigo_tipo_proyecto,
+    tp.nombre AS tipo_proyecto,
+    COUNT(DISTINCT pr.id_proyecto) AS total_proyectos,
+    COUNT(DISTINCT doc.id_docente) AS total_docentes,
+    COUNT(DISTINCT e.id_estudiante) AS total_estudiantes,
+    AVG(
+        CASE 
+            WHEN pr.fecha_inicio IS NOT NULL AND pr.fecha_fin_esperado IS NOT NULL 
+            THEN (pr.fecha_fin_esperado - pr.fecha_inicio) 
+            ELSE NULL 
+        END
+    ) AS duracion_promedio_dias,
+    ROUND(AVG(pe.puntaje_total), 2) AS evaluacion_promedio
+FROM 
+    Facultades f
+    JOIN Departamentos d ON f.id_facultad = d.id_facultad
+    JOIN Programas p ON d.id_departamento = p.id_departamento
+    JOIN Asignaturas a ON p.id_programa = a.id_programa
+    JOIN Docente_Asignatura da ON a.id_asignatura = da.id_asignatura
+    JOIN Docentes doc ON da.id_docente = doc.id_docente
+    JOIN Proyecto_Asignatura pa ON da.id_docente_asignatura = pa.id_docente_asignatura
+    JOIN Proyectos pr ON pa.id_proyecto = pr.id_proyecto
+    JOIN Tipos_Proyecto tp ON pr.id_tipo_proyecto = tp.id_tipo_proyecto
+    LEFT JOIN Estudiante_Proyecto ep ON pr.id_proyecto = ep.id_proyecto
+    LEFT JOIN Estudiantes e ON ep.id_estudiante = e.id_estudiante
+    LEFT JOIN Proyecto_Evaluacion pe ON pr.id_proyecto = pe.id_proyecto
+WHERE 
+    pr.deleted_at IS NULL
+GROUP BY 
+    f.id_facultad, f.nombre, p.id_programa, p.nombre, 
+    a.id_asignatura, a.nombre, tp.id_tipo_proyecto, tp.nombre;
+
+/*
+4. vista_custom - Vista personalizada: Docentes y su participación en proyectos
+No repite información de las vistas de proyectos y evaluaciones
+*/
+CREATE OR REPLACE VIEW vista_custom AS
+SELECT 
+    doc.id_docente AS codigo_docente,
+    doc.identificacion AS documento_docente,
+    CONCAT(doc.nombres, ' ', doc.apellidos) AS nombre_docente,
+    doc.email AS email_docente,
+    doc.telefono AS telefono_docente,
+    doc.titulo_academico,
+    doc.especialidad,
+    d.id_departamento AS codigo_departamento,
+    d.nombre AS departamento,
+    f.id_facultad AS codigo_facultad,
+    f.nombre AS facultad,
+    COUNT(DISTINCT pr.id_proyecto) AS total_proyectos_dirigidos,
+    COUNT(DISTINCT a.id_asignatura) AS total_asignaturas,
+    COUNT(DISTINCT ep.id_estudiante) AS total_estudiantes_dirigidos,
+    STRING_AGG(DISTINCT tp.nombre, ', ') AS tipos_proyecto_participados,
+    ROUND(AVG(pe.puntaje_total), 2) AS evaluacion_promedio_proyectos
+FROM 
+    Docentes doc
+    JOIN Departamentos d ON doc.id_departamento = d.id_departamento
+    JOIN Facultades f ON d.id_facultad = f.id_facultad
+    JOIN Docente_Asignatura da ON doc.id_docente = da.id_docente
+    JOIN Asignaturas a ON da.id_asignatura = a.id_asignatura
+    JOIN Proyecto_Asignatura pa ON da.id_docente_asignatura = pa.id_docente_asignatura
+    JOIN Proyectos pr ON pa.id_proyecto = pr.id_proyecto
+    JOIN Tipos_Proyecto tp ON pr.id_tipo_proyecto = tp.id_tipo_proyecto
+    LEFT JOIN Estudiante_Proyecto ep ON pr.id_proyecto = ep.id_proyecto
+    LEFT JOIN Proyecto_Evaluacion pe ON pr.id_proyecto = pe.id_proyecto
+WHERE 
+    doc.deleted_at IS NULL
+    AND pr.deleted_at IS NULL
+GROUP BY 
+    doc.id_docente, doc.identificacion, doc.nombres, doc.apellidos, doc.email, 
+    doc.telefono, doc.titulo_academico, doc.especialidad, d.id_departamento, 
+    d.nombre, f.id_facultad, f.nombre;
+
+
+
+
+
+
+
+
+/*
+5. Proyectos por facultad y estado con cantidad de estudiantes
+Utiliza: vista_proyectos
+Muestra: Facultad, estado de proyecto, cantidad de proyectos y promedio de estudiantes por proyecto
+*/
+SELECT 
+    facultad,
+    estado,
+    COUNT(DISTINCT codigo_proyecto) AS total_proyectos,
+    COUNT(DISTINCT codigo_estudiante) AS total_estudiantes,
+    ROUND(COUNT(DISTINCT codigo_estudiante)::numeric / COUNT(DISTINCT codigo_proyecto), 2) AS promedio_estudiantes_por_proyecto
+FROM 
+    vista_proyectos
+GROUP BY 
+    facultad, estado
+ORDER BY 
+    facultad, total_proyectos DESC;
+
+
+
+
+
+
+/*
+6. Evaluaciones por tipo de proyecto y programa
+Utiliza: vista_evaluaciones
+Muestra: Tipo de proyecto, programa, cantidad evaluaciones, puntaje promedio y tasa de aprobación
+*/
+SELECT 
+    tipo_proyecto,
+    programa,
+    COUNT(DISTINCT codigo_proyecto_evaluacion) AS total_evaluaciones,
+    ROUND(AVG(puntaje_total), 2) AS puntaje_promedio,
+    ROUND(100.0 * SUM(CASE WHEN aprobado THEN 1 ELSE 0 END) / COUNT(*), 2) AS porcentaje_aprobacion
+FROM 
+    vista_evaluaciones
+GROUP BY 
+    tipo_proyecto, programa
+ORDER BY 
+    tipo_proyecto, puntaje_promedio DESC;
+
+
+
+
+
+
+
+
+
+
+/*
+7. Estadísticas de proyectos por facultad y tipo
+Utiliza: vista_estadistica
+Muestra: Facultad, tipo proyecto, métricas de participación y duración
+*/
+SELECT 
+    facultad,
+    tipo_proyecto,
+    SUM(total_proyectos) AS cantidad_proyectos,
+    SUM(total_docentes) AS docentes_participantes,
+    SUM(total_estudiantes) AS estudiantes_participantes,
+    ROUND(AVG(duracion_promedio_dias), 1) AS duracion_promedia_dias,
+    ROUND(AVG(evaluacion_promedio), 2) AS evaluacion_promedio
+FROM 
+    vista_estadistica
+GROUP BY 
+    facultad, tipo_proyecto
+HAVING 
+    SUM(total_proyectos) > 0
+ORDER BY 
+    facultad, cantidad_proyectos DESC;
+
+
+
+/*
+8. Desempeño de docentes por departamento
+Utiliza: vista_custom
+Muestra: Departamento, cantidad docentes, métricas de participación y evaluación
+*/
+SELECT 
+    departamento,
+    COUNT(DISTINCT codigo_docente) AS cantidad_docentes,
+    SUM(total_proyectos_dirigidos) AS total_proyectos,
+    ROUND(AVG(total_estudiantes_dirigidos), 1) AS promedio_estudiantes_por_docente,
+    ROUND(AVG(evaluacion_promedio_proyectos), 2) AS evaluacion_promedio
+FROM 
+    vista_custom
+GROUP BY 
+    departamento
+HAVING 
+    COUNT(DISTINCT codigo_docente) > 0
+ORDER BY 
+    evaluacion_promedio DESC;

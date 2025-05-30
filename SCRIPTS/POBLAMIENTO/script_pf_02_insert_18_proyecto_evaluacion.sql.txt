@@ -1,0 +1,6 @@
+INSERT INTO Proyecto_Evaluacion (id_proyecto, id_evaluacion, id_evaluador, puntaje_total, aprobado) VALUES
+(1, 1, 1, 85.50, TRUE),
+(1, 2, 2, 78.00, TRUE),
+(2, 1, 3, 65.50, FALSE),
+(3, 3, 4, 90.00, TRUE),
+(4, 5, 5, 82.50, TRUE);

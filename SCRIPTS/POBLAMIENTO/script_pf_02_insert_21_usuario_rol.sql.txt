@@ -1,0 +1,14 @@
+-- 3. Insertar roles usando subconsultas (forma segura)
+INSERT INTO Usuario_Rol (id_usuario, id_rol)
+SELECT u.id_usuario, r.id_rol
+FROM 
+  (VALUES 
+    ('admin', 'Administrador'),
+    ('cmartinez', 'Docente'),
+    ('cmartinez', 'Evaluador'),
+    ('jperez', 'Estudiante'),
+    ('mramirez', 'Evaluador'),
+    ('agomez', 'Docente')
+  ) AS pairs(username, rolname)
+JOIN Usuarios u ON u.username = pairs.username
+JOIN Roles r ON r.nombre = pairs.rolname;

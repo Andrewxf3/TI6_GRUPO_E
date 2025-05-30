@@ -1,0 +1,360 @@
+-- Tabla de Instituciones
+CREATE TABLE Instituciones (
+    id_institucion SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    direccion VARCHAR(200),
+    telefono VARCHAR(20),
+    email VARCHAR(100),
+    fecha_creacion DATE,
+    activa BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL,
+    CONSTRAINT uk_institucion_nombre UNIQUE (nombre)
+);
+
+-- Tabla de Facultades
+CREATE TABLE Facultades (
+    id_facultad SERIAL PRIMARY KEY,
+    id_institucion INTEGER NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    decano VARCHAR(100),
+    telefono VARCHAR(20),
+    email VARCHAR(100),
+    activa BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_institucion) REFERENCES Instituciones(id_institucion) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT uk_facultad_nombre UNIQUE (id_institucion, nombre)
+);
+
+-- Tabla de Departamentos
+CREATE TABLE Departamentos (
+    id_departamento SERIAL PRIMARY KEY,
+    id_facultad INTEGER NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    director VARCHAR(100),
+    telefono VARCHAR(50),
+    email VARCHAR(100),
+    activo BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_facultad) REFERENCES Facultades(id_facultad) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT uk_departamento_nombre UNIQUE (id_facultad, nombre)
+);
+
+-- Tabla de Programas Académicos
+CREATE TABLE Programas (
+    id_programa SERIAL PRIMARY KEY,
+    id_departamento INTEGER NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    codigo VARCHAR(20) NOT NULL,
+    duracion_semestres INTEGER,
+    titulo_otorgado VARCHAR(100),
+    activo BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_departamento) REFERENCES Departamentos(id_departamento) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT uk_programa_codigo UNIQUE (codigo),
+    CONSTRAINT uk_programa_nombre UNIQUE (id_departamento, nombre)
+);
+
+-- Tabla de Asignaturas
+CREATE TABLE Asignaturas (
+    id_asignatura SERIAL PRIMARY KEY,
+    id_programa INTEGER NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    codigo VARCHAR(20) NOT NULL,
+    creditos INTEGER,
+    semestre INTEGER,
+    horas_teoria INTEGER,
+    horas_practica INTEGER,
+    activa BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_programa) REFERENCES Programas(id_programa) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT uk_asignatura_codigo UNIQUE (codigo),
+    CONSTRAINT uk_asignatura_nombre UNIQUE (id_programa, nombre)
+);
+
+-- Tabla de Tipos de Proyecto
+CREATE TABLE Tipos_Proyecto (
+    id_tipo_proyecto SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    requisitos TEXT,
+    activo BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL,
+    CONSTRAINT uk_tipo_proyecto_nombre UNIQUE (nombre)
+);
+
+-- Tabla de Docentes
+CREATE TABLE Docentes (
+    id_docente SERIAL PRIMARY KEY,
+    id_departamento INTEGER,
+    identificacion VARCHAR(20) UNIQUE NOT NULL,
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    telefono VARCHAR(20),
+    titulo_academico VARCHAR(100),
+    especialidad VARCHAR(100),
+    activo BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_departamento) REFERENCES Departamentos(id_departamento) ON DELETE SET NULL ON UPDATE CASCADE
+);
+
+-- Tabla de Estudiantes
+CREATE TABLE Estudiantes (
+    id_estudiante SERIAL PRIMARY KEY,
+    id_programa INTEGER NOT NULL,
+    codigo_estudiante VARCHAR(20) UNIQUE NOT NULL,
+    identificacion VARCHAR(20) UNIQUE NOT NULL,
+    nombres VARCHAR(100) NOT NULL,
+	sexo VARCHAR(20) CHECK (sexo IN ('masculino','femenino')),
+    apellidos VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    telefono VARCHAR(20),
+    semestre_actual INTEGER,
+    activo BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_programa) REFERENCES Programas(id_programa) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- Tabla de Evaluadores (optimizada para evitar redundancia con Docentes)
+CREATE TABLE Evaluadores (
+    id_evaluador SERIAL PRIMARY KEY,
+    id_docente INTEGER NULL, -- Solo si es interno
+    nombres VARCHAR(100) NOT NULL,
+    apellidos VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    telefono VARCHAR(20),
+    tipo VARCHAR(8) NOT NULL CHECK (tipo IN ('interno', 'externo')),
+    institucion_externa VARCHAR(100) NULL, -- Solo si es externo
+    especialidad VARCHAR(100),
+    activo BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_docente) REFERENCES Docentes(id_docente) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT chk_evaluador_tipo CHECK (
+        (tipo = 'interno' AND id_docente IS NOT NULL) OR
+        (tipo = 'externo' AND id_docente IS NULL)
+    )
+);
+
+-- Tabla de Proyectos
+CREATE TABLE Proyectos (
+    id_proyecto SERIAL PRIMARY KEY,
+    id_tipo_proyecto INTEGER NOT NULL,
+    titulo VARCHAR(200) NOT NULL,
+    descripcion TEXT,
+    fecha_inicio DATE,
+    fecha_fin_esperado DATE,
+    fecha_fin_real DATE NULL,
+    estado VARCHAR(50) NOT NULL CHECK (estado IN ('planificacion', 'en_proceso', 'finalizado', 'evaluado', 'archivado')) DEFAULT 'planificacion',
+    observaciones TEXT,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_tipo_proyecto) REFERENCES Tipos_Proyecto(id_tipo_proyecto) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT uk_proyecto_titulo UNIQUE (titulo)
+);
+
+-- Tabla de Evaluaciones
+CREATE TABLE Evaluaciones (
+    id_evaluacion SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    fecha_creacion DATE NOT NULL DEFAULT CURRENT_DATE,
+    activa BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL,
+    CONSTRAINT uk_evaluacion_nombre UNIQUE (nombre)
+);
+
+-- Tabla de Criterios de Evaluación
+CREATE TABLE Criterios_Evaluacion (
+    id_criterio SERIAL PRIMARY KEY,
+    id_evaluacion INTEGER NOT NULL,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    peso DECIMAL(5,2) NOT NULL,
+    escala INTEGER NOT NULL, -- Ej: 1-5, 1-10, etc.
+    activo BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_evaluacion) REFERENCES Evaluaciones(id_evaluacion) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT uk_criterio_nombre UNIQUE (id_evaluacion, nombre),
+    CONSTRAINT chk_peso_positivo CHECK (peso > 0)
+);
+
+-- --------------------------------------------------------
+-- TABLAS DE RELACIÓN
+-- --------------------------------------------------------
+
+-- Relación Docente-Asignatura (nueva tabla sugerida)
+CREATE TABLE Docente_Asignatura (
+    id_docente_asignatura SERIAL PRIMARY KEY,
+    id_docente INTEGER NOT NULL,
+    id_asignatura INTEGER NOT NULL,
+    semestre VARCHAR(20) NOT NULL,
+    ano INTEGER NOT NULL,
+    grupo VARCHAR(20) NOT NULL,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_docente) REFERENCES Docentes(id_docente) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_asignatura) REFERENCES Asignaturas(id_asignatura) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT uk_docente_asignatura UNIQUE (id_docente, id_asignatura, semestre, ano, grupo)
+);
+
+-- Relación Proyecto-Asignatura (modificada para usar Docente_Asignatura)
+CREATE TABLE Proyecto_Asignatura (
+    id_proyecto_asignatura SERIAL PRIMARY KEY,
+    id_proyecto INTEGER NOT NULL,
+    id_docente_asignatura INTEGER NOT NULL,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_proyecto) REFERENCES Proyectos(id_proyecto) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_docente_asignatura) REFERENCES Docente_Asignatura(id_docente_asignatura) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT uk_proyecto_asignatura UNIQUE (id_proyecto, id_docente_asignatura)
+);
+
+-- Relación Estudiantes-Proyecto (equipos de trabajo)
+CREATE TABLE Estudiante_Proyecto (
+    id_estudiante_proyecto SERIAL PRIMARY KEY,
+    id_proyecto INTEGER NOT NULL,
+    id_estudiante INTEGER NOT NULL,
+    rol VARCHAR(50) NOT NULL CHECK (rol IN ('lider', 'miembro')) DEFAULT 'miembro',
+    porcentaje_participacion DECIMAL(5,2),
+    fecha_ingreso TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_proyecto) REFERENCES Proyectos(id_proyecto) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_estudiante) REFERENCES Estudiantes(id_estudiante) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT uk_estudiante_proyecto UNIQUE (id_proyecto, id_estudiante),
+    CONSTRAINT chk_porcentaje_valido CHECK (porcentaje_participacion IS NULL OR (porcentaje_participacion >= 0 AND porcentaje_participacion <= 100))
+);
+
+-- Relación Proyecto-Evaluación (incluye evaluador y resultados)
+CREATE TABLE Proyecto_Evaluacion (
+    id_proyecto_evaluacion SERIAL PRIMARY KEY,
+    id_proyecto INTEGER NOT NULL,
+    id_evaluacion INTEGER NOT NULL,
+    id_evaluador INTEGER NOT NULL,
+    fecha_evaluacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    observaciones TEXT,
+    puntaje_total DECIMAL(5,2),
+    aprobado BOOLEAN,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_proyecto) REFERENCES Proyectos(id_proyecto) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_evaluacion) REFERENCES Evaluaciones(id_evaluacion) ON DELETE RESTRICT ON UPDATE CASCADE,
+    FOREIGN KEY (id_evaluador) REFERENCES Evaluadores(id_evaluador) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT uk_proyecto_evaluacion UNIQUE (id_proyecto, id_evaluacion, id_evaluador)
+);
+
+-- Detalle de Evaluación (resultados por criterio)
+CREATE TABLE Detalle_Evaluacion (
+    id_detalle_evaluacion SERIAL PRIMARY KEY,
+    id_proyecto_evaluacion INTEGER NOT NULL,
+    id_criterio INTEGER NOT NULL,
+    puntaje DECIMAL(5,2) NOT NULL,
+    observaciones TEXT,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_proyecto_evaluacion) REFERENCES Proyecto_Evaluacion(id_proyecto_evaluacion) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_criterio) REFERENCES Criterios_Evaluacion(id_criterio) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT uk_detalle_evaluacion UNIQUE (id_proyecto_evaluacion, id_criterio),
+    CONSTRAINT chk_puntaje_positivo CHECK (puntaje >= 0)
+);
+
+-- --------------------------------------------------------
+-- SISTEMA DE AUTENTICACIÓN Y SEGURIDAD (MEJORADO)
+-- --------------------------------------------------------
+
+-- Tabla de Usuarios (sin relación polimórfica)
+CREATE TABLE Usuarios (
+    id_usuario SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    id_docente INTEGER NULL,
+    id_estudiante INTEGER NULL,
+    id_evaluador INTEGER NULL,
+    activo BOOLEAN DEFAULT TRUE,
+    fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ultimo_login TIMESTAMP NULL,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_docente) REFERENCES Docentes(id_docente) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (id_estudiante) REFERENCES Estudiantes(id_estudiante) ON DELETE SET NULL ON UPDATE CASCADE,
+    FOREIGN KEY (id_evaluador) REFERENCES Evaluadores(id_evaluador) ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT chk_usuario_relacion CHECK (
+        (id_docente IS NOT NULL AND id_estudiante IS NULL AND id_evaluador IS NULL) OR
+        (id_docente IS NULL AND id_estudiante IS NOT NULL AND id_evaluador IS NULL) OR
+        (id_docente IS NULL AND id_estudiante IS NULL AND id_evaluador IS NOT NULL) OR
+        (id_docente IS NULL AND id_estudiante IS NULL AND id_evaluador IS NULL) -- admin
+    )
+);
+
+-- Tabla de Roles
+CREATE TABLE Roles (
+    id_rol SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) UNIQUE NOT NULL,
+    descripcion TEXT,
+    activo BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL
+);
+
+-- Tabla de Permisos
+CREATE TABLE Permisos (
+    id_permiso SERIAL PRIMARY KEY,
+    nombre VARCHAR(50) UNIQUE NOT NULL,
+    descripcion TEXT,
+    modulo VARCHAR(50) NOT NULL,
+    activo BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL
+);
+
+-- Relación Usuario-Rol
+CREATE TABLE Usuario_Rol (
+    id_usuario_rol SERIAL PRIMARY KEY,
+    id_usuario INTEGER NOT NULL,
+    id_rol INTEGER NOT NULL,
+    fecha_asignacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    activo BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_rol) REFERENCES Roles(id_rol) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT uk_usuario_rol UNIQUE (id_usuario, id_rol)
+);
+
+-- Relación Rol-Permiso
+CREATE TABLE Rol_Permiso (
+    id_rol_permiso SERIAL PRIMARY KEY,
+    id_rol INTEGER NOT NULL,
+    id_permiso INTEGER NOT NULL,
+    fecha_asignacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    activo BOOLEAN DEFAULT TRUE,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_rol) REFERENCES Roles(id_rol) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_permiso) REFERENCES Permisos(id_permiso) ON DELETE RESTRICT ON UPDATE CASCADE,
+    CONSTRAINT uk_rol_permiso UNIQUE (id_rol, id_permiso)
+);
+
+-- --------------------------------------------------------
+-- TABLAS ADICIONALES SUGERIDAS
+-- --------------------------------------------------------
+
+-- Tabla de Documentos de Proyectos
+CREATE TABLE Documentos_Proyecto (
+    id_documento SERIAL PRIMARY KEY,
+    id_proyecto INTEGER NOT NULL,
+    id_usuario_subio INTEGER NOT NULL,
+    nombre_archivo VARCHAR(255) NOT NULL,
+    ruta_almacenamiento VARCHAR(512) NOT NULL,
+    tipo VARCHAR(50) NOT NULL,
+    tamanio INTEGER NOT NULL,
+    fecha_subida TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    version VARCHAR(20),
+    descripcion TEXT,
+    deleted_at TIMESTAMP NULL,
+    FOREIGN KEY (id_proyecto) REFERENCES Proyectos(id_proyecto) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_usuario_subio) REFERENCES Usuarios(id_usuario) ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
+-- Tabla de Histórico de Estados de Proyectos
+CREATE TABLE Historico_Estados_Proyecto (
+    id_historico SERIAL PRIMARY KEY,
+    id_proyecto INTEGER NOT NULL,
+    estado_anterior VARCHAR(50) CHECK (estado_anterior IN ('planificacion', 'en_proceso', 'finalizado', 'evaluado', 'archivado')),
+    estado_nuevo VARCHAR(50) NOT NULL CHECK (estado_nuevo IN ('planificacion', 'en_proceso', 'finalizado', 'evaluado', 'archivado')),
+    fecha_cambio TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    id_usuario INTEGER NOT NULL,
+    comentario TEXT,
+    FOREIGN KEY (id_proyecto) REFERENCES Proyectos(id_proyecto) ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (id_usuario) REFERENCES Usuarios(id_usuario) ON DELETE RESTRICT ON UPDATE CASCADE
+);

@@ -1,0 +1,6 @@
+INSERT INTO Evaluadores (id_docente, nombres, apellidos, email, telefono, tipo, institucion_externa, especialidad) VALUES
+(1, 'Carlos', 'Martínez', 'cmartinez@unal.edu.co', '3101234567', 'interno', NULL, 'Inteligencia Artificial'),
+(2, 'Ana', 'Gómez', 'agomez@unal.edu.co', '3102345678', 'interno', NULL, 'Desarrollo de Software'),
+(NULL, 'Marta', 'Ramírez', 'mramirez@empresa.com', '3156789012', 'externo', 'Tech Solutions', 'Ciberseguridad'),
+(NULL, 'Jorge', 'Díaz', 'jdiaz@consultores.com', '3157890123', 'externo', 'Consultores Asociados', 'Gestión de Proyectos'),
+(5, 'Pedro', 'López', 'plopez@uniandes.edu.co', '3105678901', 'interno', NULL, 'Econometría');

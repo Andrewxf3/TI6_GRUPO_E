@@ -1,0 +1,6 @@
+INSERT INTO Facultades (id_institucion, nombre, decano, telefono, email) VALUES
+(1, 'Facultad de Ingeniería', 'Carlos Alberto Higuera', '+5713165000 Ext. 123', 'ingenieria@unal.edu.co'),
+(1, 'Facultad de Ciencias', 'María del Pilar Gómez', '+5713165000 Ext. 124', 'ciencias@unal.edu.co'),
+(2, 'Facultad de Economía', 'Juan Pablo Zárate', '+5713394949 Ext. 201', 'economia@uniandes.edu.co'),
+(3, 'Facultad de Artes Integradas', 'Luz Adriana Vera', '+5723212100 Ext. 301', 'artes@univalle.edu.co'),
+(4, 'Facultad de Medicina', 'Oscar Herrán', '+5742198333 Ext. 401', 'medicina@udea.edu.co');

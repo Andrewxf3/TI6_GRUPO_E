@@ -1,0 +1,7 @@
+-- 2. Insertar usuarios (
+INSERT INTO Usuarios (username, password_hash, email, id_docente, id_estudiante, id_evaluador) VALUES
+('admin', '$2a$10$xJwL5v5Jz5U5Z5b5e5X5.e5X5e5X5e5X5e5X5e5X5e5X5e5X5e5', 'admin@universidad.edu.co', NULL, NULL, NULL),
+('cmartinez', '$2a$10$xJwL5v5Jz5U5Z5b5e5X5.e5X5e5X5e5X5e5X5e5X5e5X5e5X5e5', 'cmartinez@unal.edu.co', 1, NULL, NULL),
+('jperez', '$2a$10$xJwL5v5Jz5U5Z5b5e5X5.e5X5e5X5e5X5e5X5e5X5e5X5e5X5e5', 'jperez@unal.edu.co', NULL, 1, NULL),
+('mramirez', '$2a$10$xJwL5v5Jz5U5Z5b5e5X5.e5X5e5X5e5X5e5X5e5X5e5X5e5X5e5', 'mramirez@empresa.com', NULL, NULL, 3),
+('agomez', '$2a$10$xJwL5v5Jz5U5Z5b5e5X5.e5X5e5X5e5X5e5X5e5X5e5X5e5X5e5', 'agomez@unal.edu.co', 2, NULL, NULL);

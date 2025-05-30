@@ -1,0 +1,362 @@
+/*
+1. Listado general de proyectos ordenado por facultad, programa y código de proyecto
+Tablas: tipos de proyecto, proyectos, facultad, programas
+*/
+SELECT 
+    f.nombre AS facultad,
+    p.nombre AS programa,
+    pr.id_proyecto AS codigo_proyecto,
+    pr.titulo AS nombre_proyecto,
+    tp.nombre AS tipo_proyecto,
+    pr.fecha_inicio,
+    pr.fecha_fin_esperado,
+    pr.estado
+FROM 
+    Proyectos pr
+    JOIN Tipos_Proyecto tp ON pr.id_tipo_proyecto = tp.id_tipo_proyecto
+    JOIN Proyecto_Asignatura pa ON pr.id_proyecto = pa.id_proyecto
+    JOIN Docente_Asignatura da ON pa.id_docente_asignatura = da.id_docente_asignatura
+    JOIN Asignaturas a ON da.id_asignatura = a.id_asignatura
+    JOIN Programas p ON a.id_programa = p.id_programa
+    JOIN Departamentos d ON p.id_departamento = d.id_departamento
+    JOIN Facultades f ON d.id_facultad = f.id_facultad
+WHERE 
+    pr.deleted_at IS NULL
+ORDER BY 
+    f.nombre, p.nombre, pr.id_proyecto;
+
+
+
+
+/*
+2. Listado detallado de proyectos ordenado por código de proyecto
+Tablas: tipos de proyecto, proyectos, facultad, programas, asignaturas, grupos, docentes y estudiantes
+*/
+SELECT 
+    pr.id_proyecto AS codigo_proyecto,
+    pr.titulo AS nombre_proyecto,
+    tp.nombre AS tipo_proyecto,
+    f.nombre AS facultad,
+    p.nombre AS programa,
+    a.nombre AS asignatura,
+    a.codigo AS codigo_asignatura,
+    CONCAT(d.nombres, ' ', d.apellidos) AS docente_responsable,
+    STRING_AGG(CONCAT(e.nombres, ' ', e.apellidos), ', ') AS estudiantes,
+    pr.fecha_inicio,
+    pr.fecha_fin_esperado,
+    pr.estado
+FROM 
+    Proyectos pr
+    JOIN Tipos_Proyecto tp ON pr.id_tipo_proyecto = tp.id_tipo_proyecto
+    JOIN Proyecto_Asignatura pa ON pr.id_proyecto = pa.id_proyecto
+    JOIN Docente_Asignatura da ON pa.id_docente_asignatura = da.id_docente_asignatura
+    JOIN Asignaturas a ON da.id_asignatura = a.id_asignatura
+    JOIN Programas p ON a.id_programa = p.id_programa
+    JOIN Departamentos dpt ON p.id_departamento = dpt.id_departamento
+    JOIN Facultades f ON dpt.id_facultad = f.id_facultad
+    JOIN Docentes d ON da.id_docente = d.id_docente
+    JOIN Estudiante_Proyecto ep ON pr.id_proyecto = ep.id_proyecto
+    JOIN Estudiantes e ON ep.id_estudiante = e.id_estudiante
+WHERE 
+    pr.deleted_at IS NULL
+GROUP BY 
+    pr.id_proyecto, tp.nombre, f.nombre, p.nombre, a.nombre, a.codigo, d.nombres, d.apellidos
+ORDER BY 
+    pr.id_proyecto;
+
+
+
+
+
+/*
+3. Listado general de evaluación de proyectos con todos los datos relevantes
+*/
+SELECT 
+    pr.id_proyecto AS codigo_proyecto,
+    pr.titulo AS nombre_proyecto,
+    e.nombre AS tipo_evaluacion,
+    CONCAT(ev.nombres, ' ', ev.apellidos) AS evaluador,
+    pe.fecha_evaluacion,
+    pe.puntaje_total,
+    pe.aprobado,
+    pe.observaciones,
+    STRING_AGG(CONCAT(c.nombre, ': ', de.puntaje), '; ') AS detalle_criterios
+FROM 
+    Proyectos pr
+    JOIN Proyecto_Evaluacion pe ON pr.id_proyecto = pe.id_proyecto
+    JOIN Evaluaciones e ON pe.id_evaluacion = e.id_evaluacion
+    JOIN Evaluadores ev ON pe.id_evaluador = ev.id_evaluador
+    JOIN Detalle_Evaluacion de ON pe.id_proyecto_evaluacion = de.id_proyecto_evaluacion
+    JOIN Criterios_Evaluacion c ON de.id_criterio = c.id_criterio
+WHERE 
+    pr.deleted_at IS NULL
+GROUP BY 
+    pr.id_proyecto, pr.titulo, e.nombre, ev.nombres, ev.apellidos, pe.fecha_evaluacion, 
+    pe.puntaje_total, pe.aprobado, pe.observaciones
+ORDER BY 
+    pe.fecha_evaluacion DESC;
+
+
+
+
+/*
+4. Listado de cantidad de proyectos por programa ordenado por facultad/programa
+*/
+SELECT 
+    f.nombre AS facultad,
+    p.nombre AS programa,
+    COUNT(DISTINCT pr.id_proyecto) AS total_proyectos
+FROM 
+    Facultades f
+    JOIN Departamentos d ON f.id_facultad = d.id_facultad
+    JOIN Programas p ON d.id_departamento = p.id_departamento
+    JOIN Asignaturas a ON p.id_programa = a.id_programa
+    JOIN Docente_Asignatura da ON a.id_asignatura = da.id_asignatura
+    JOIN Proyecto_Asignatura pa ON da.id_docente_asignatura = pa.id_docente_asignatura
+    JOIN Proyectos pr ON pa.id_proyecto = pr.id_proyecto
+WHERE 
+    pr.deleted_at IS NULL
+GROUP BY 
+    f.nombre, p.nombre
+ORDER BY 
+    f.nombre, p.nombre;
+
+
+/*
+5. Listado de estudiantes de una asignatura/grupo específico
+Ejemplo: Base de Datos I (ET0187) Grupo 051
+*/
+SELECT 
+    e.codigo_estudiante AS codigo,
+    CONCAT(e.apellidos, ', ', e.nombres) AS estudiante,
+    p.nombre AS programa,
+    e.semestre_actual AS semestre,
+    e.email,
+    e.telefono
+FROM 
+    Estudiantes e
+    JOIN Programas p ON e.id_programa = p.id_programa
+    JOIN Estudiante_Proyecto ep ON e.id_estudiante = ep.id_estudiante
+    JOIN Proyectos pr ON ep.id_proyecto = pr.id_proyecto
+    JOIN Proyecto_Asignatura pa ON pr.id_proyecto = pa.id_proyecto
+    JOIN Docente_Asignatura da ON pa.id_docente_asignatura = da.id_docente_asignatura
+    JOIN Asignaturas a ON da.id_asignatura = a.id_asignatura
+WHERE 
+    a.codigo = 'ET0187' 
+    AND da.grupo = '051'
+    AND e.activo = TRUE
+ORDER BY 
+    e.apellidos, e.nombres;
+
+
+
+
+/*
+6. Listado de asignaturas/grupos por tipo de proyecto
+*/
+SELECT 
+    tp.nombre AS tipo_proyecto,
+    f.nombre AS facultad,
+    p.nombre AS programa,
+    a.codigo AS codigo_asignatura,
+    a.nombre AS asignatura,
+    da.grupo,
+    COUNT(DISTINCT pr.id_proyecto) AS cantidad_proyectos
+FROM 
+    Tipos_Proyecto tp
+    JOIN Proyectos pr ON tp.id_tipo_proyecto = pr.id_tipo_proyecto
+    JOIN Proyecto_Asignatura pa ON pr.id_proyecto = pa.id_proyecto
+    JOIN Docente_Asignatura da ON pa.id_docente_asignatura = da.id_docente_asignatura
+    JOIN Asignaturas a ON da.id_asignatura = a.id_asignatura
+    JOIN Programas p ON a.id_programa = p.id_programa
+    JOIN Departamentos d ON p.id_departamento = d.id_departamento
+    JOIN Facultades f ON d.id_facultad = f.id_facultad
+WHERE 
+    pr.deleted_at IS NULL
+GROUP BY 
+    tp.nombre, f.nombre, p.nombre, a.codigo, a.nombre, da.grupo
+ORDER BY 
+    tp.nombre, f.nombre, p.nombre, a.nombre;
+
+
+
+
+/*
+7. Listado de cantidad de tipos de proyectos por facultad y programa
+*/
+SELECT 
+    f.nombre AS facultad,
+    p.nombre AS programa,
+    tp.nombre AS tipo_proyecto,
+    COUNT(DISTINCT pr.id_proyecto) AS cantidad_proyectos
+FROM 
+    Facultades f
+    JOIN Departamentos d ON f.id_facultad = d.id_facultad
+    JOIN Programas p ON d.id_departamento = p.id_departamento
+    JOIN Asignaturas a ON p.id_programa = a.id_programa
+    JOIN Docente_Asignatura da ON a.id_asignatura = da.id_asignatura
+    JOIN Proyecto_Asignatura pa ON da.id_docente_asignatura = pa.id_docente_asignatura
+    JOIN Proyectos pr ON pa.id_proyecto = pr.id_proyecto
+    JOIN Tipos_Proyecto tp ON pr.id_tipo_proyecto = tp.id_tipo_proyecto
+WHERE 
+    pr.deleted_at IS NULL
+GROUP BY 
+    f.nombre, p.nombre, tp.nombre
+ORDER BY 
+    f.nombre, p.nombre, tp.nombre;
+
+
+
+/*
+8. Listado de evaluadores de proyectos con todos los detalles
+*/
+SELECT 
+    ev.id_evaluador AS codigo_evaluador,
+    CONCAT(ev.nombres, ' ', ev.apellidos) AS evaluador,
+    ev.tipo AS tipo_evaluador,
+    ev.especialidad,
+    f.nombre AS facultad,
+    p.nombre AS programa,
+    tp.nombre AS tipo_proyecto,
+    pr.id_proyecto AS codigo_proyecto,
+    pr.titulo AS nombre_proyecto
+FROM 
+    Evaluadores ev
+    JOIN Proyecto_Evaluacion pe ON ev.id_evaluador = pe.id_evaluador
+    JOIN Proyectos pr ON pe.id_proyecto = pr.id_proyecto
+    JOIN Tipos_Proyecto tp ON pr.id_tipo_proyecto = tp.id_tipo_proyecto
+    JOIN Proyecto_Asignatura pa ON pr.id_proyecto = pa.id_proyecto
+    JOIN Docente_Asignatura da ON pa.id_docente_asignatura = da.id_docente_asignatura
+    JOIN Asignaturas a ON da.id_asignatura = a.id_asignatura
+    JOIN Programas p ON a.id_programa = p.id_programa
+    JOIN Departamentos d ON p.id_departamento = d.id_departamento
+    JOIN Facultades f ON d.id_facultad = f.id_facultad
+WHERE 
+    pr.deleted_at IS NULL
+ORDER BY 
+    ev.apellidos, ev.nombres, f.nombre, p.nombre, tp.nombre, pr.titulo;
+
+
+
+
+/*
+9. Listado de evaluadores con resultados generales de evaluación
+*/
+SELECT 
+    ev.id_evaluador AS codigo_evaluador,
+    CONCAT(ev.nombres, ' ', ev.apellidos) AS evaluador,
+    COUNT(pe.id_proyecto_evaluacion) AS total_evaluaciones,
+    ROUND(AVG(pe.puntaje_total), 2) AS promedio_puntaje,
+    ROUND(100.0 * SUM(CASE WHEN pe.aprobado THEN 1 ELSE 0 END) / COUNT(*), 2) AS porcentaje_aprobacion,
+    MIN(pe.fecha_evaluacion) AS primera_evaluacion,
+    MAX(pe.fecha_evaluacion) AS ultima_evaluacion
+FROM 
+    Evaluadores ev
+    JOIN Proyecto_Evaluacion pe ON ev.id_evaluador = pe.id_evaluador
+    JOIN Proyectos pr ON pe.id_proyecto = pr.id_proyecto
+WHERE 
+    pr.deleted_at IS NULL
+GROUP BY 
+    ev.id_evaluador, ev.nombres, ev.apellidos
+ORDER BY 
+    total_evaluaciones DESC;
+
+
+
+
+
+/*
+10. Listado de evaluadores con resultados detallados de evaluación
+*/
+SELECT 
+    ev.id_evaluador AS codigo_evaluador,
+    CONCAT(ev.nombres, ' ', ev.apellidos) AS evaluador,
+    pr.id_proyecto AS codigo_proyecto,
+    pr.titulo AS nombre_proyecto,
+    e.nombre AS tipo_evaluacion,
+    pe.fecha_evaluacion,
+    pe.puntaje_total,
+    pe.aprobado,
+    STRING_AGG(CONCAT(c.nombre, ' (', de.puntaje, '/', c.escala, ')'), ', ') AS detalle_puntajes
+FROM 
+    Evaluadores ev
+    JOIN Proyecto_Evaluacion pe ON ev.id_evaluador = pe.id_evaluador
+    JOIN Evaluaciones e ON pe.id_evaluacion = e.id_evaluacion
+    JOIN Proyectos pr ON pe.id_proyecto = pr.id_proyecto
+    JOIN Detalle_Evaluacion de ON pe.id_proyecto_evaluacion = de.id_proyecto_evaluacion
+    JOIN Criterios_Evaluacion c ON de.id_criterio = c.id_criterio
+WHERE 
+    pr.deleted_at IS NULL
+GROUP BY 
+    ev.id_evaluador, ev.nombres, ev.apellidos, pr.id_proyecto, pr.titulo, 
+    e.nombre, pe.fecha_evaluacion, pe.puntaje_total, pe.aprobado
+ORDER BY 
+    ev.apellidos, ev.nombres, pe.fecha_evaluacion DESC;
+
+
+
+
+/*
+11. Listado de usuarios del sistema con roles y características
+*/
+SELECT 
+    u.id_usuario AS codigo_usuario,
+    u.username,
+    u.email,
+    CASE 
+        WHEN u.id_docente IS NOT NULL THEN 'Docente'
+        WHEN u.id_estudiante IS NOT NULL THEN 'Estudiante'
+        WHEN u.id_evaluador IS NOT NULL THEN 'Evaluador'
+        ELSE 'Administrador'
+    END AS tipo_usuario,
+    STRING_AGG(r.nombre, ', ') AS roles,
+    u.activo,
+    u.ultimo_login
+FROM 
+    Usuarios u
+    LEFT JOIN Usuario_Rol ur ON u.id_usuario = ur.id_usuario
+    LEFT JOIN Roles r ON ur.id_rol = r.id_rol
+GROUP BY 
+    u.id_usuario, u.username, u.email, u.id_docente, u.id_estudiante, 
+    u.id_evaluador, u.activo, u.ultimo_login
+ORDER BY 
+    u.username;
+
+
+
+
+
+
+/*
+12. Consulta libre: Proyectos por estado y facultad con evaluación promedio
+
+*/
+SELECT 
+    f.nombre AS facultad,
+    pr.estado,
+    COUNT(pr.id_proyecto) AS cantidad_proyectos,
+    ROUND(AVG(pe.puntaje_total), 2) AS evaluacion_promedio,
+    CASE 
+        WHEN COUNT(pe.id_proyecto_evaluacion) > 0 
+        THEN ROUND(100.0 * SUM(CASE WHEN pe.aprobado THEN 1 ELSE 0 END) / COUNT(pe.id_proyecto_evaluacion), 2)
+        ELSE 0 
+    END AS porcentaje_aprobacion,
+    MIN(pr.fecha_inicio) AS proyecto_mas_antiguo,
+    MAX(pr.fecha_inicio) AS proyecto_mas_reciente
+FROM 
+    Facultades f
+    JOIN Departamentos d ON f.id_facultad = d.id_facultad
+    JOIN Programas p ON d.id_departamento = p.id_departamento
+    JOIN Asignaturas a ON p.id_programa = a.id_programa
+    JOIN Docente_Asignatura da ON a.id_asignatura = da.id_asignatura
+    JOIN Proyecto_Asignatura pa ON da.id_docente_asignatura = pa.id_docente_asignatura
+    JOIN Proyectos pr ON pa.id_proyecto = pr.id_proyecto
+    LEFT JOIN Proyecto_Evaluacion pe ON pr.id_proyecto = pe.id_proyecto
+WHERE 
+    pr.deleted_at IS NULL
+GROUP BY 
+    f.nombre, pr.estado
+HAVING 
+    COUNT(pr.id_proyecto) > 0
+ORDER BY 
+    f.nombre, cantidad_proyectos DESC;
